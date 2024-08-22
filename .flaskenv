@@ -1,3 +1,3 @@
-FLASK_APP=app:app
+FLASK_APP=hushhush.py
 
 FLASK_ENV=development

@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block title %}Evaluation{% endblock %}
+
+{% block content %}
+  <h1>Evaluation Page</h1>
+  <ul>
+    {% for submission in submissions %}
+      <li>{{ submission }}</li>
+    {% endfor %}
+  </ul>
+  <p>This is where the manager would review the code submissions.</p>
+{% endblock %}
+
+
+

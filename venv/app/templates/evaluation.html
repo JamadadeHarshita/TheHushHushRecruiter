@@ -6,11 +6,12 @@
   <h1>Evaluation Page</h1>
   <ul>
     {% for submission in submissions %}
-      <li>{{ submission }}</li>
+      <li>
+        <strong>{{ submission.username }}</strong> submitted code at {{ submission.timestamp }}<br>
+        <pre>{{ submission.code }}</pre>
+        <a href="{{ url_for('feedback', submission_id=submission.id) }}">Provide Feedback</a>
+      </li>
     {% endfor %}
   </ul>
-  <p>This is where the manager would review the code submissions.</p>
 {% endblock %}
-
-
 

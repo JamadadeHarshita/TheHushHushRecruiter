@@ -1,22 +1,21 @@
-<!-- app/templates/index.html -->
 {% extends 'base.html' %}
 
-{% block title %}Submit Your Information{% endblock %}
+{% block title %}Enter Your Username{% endblock %}
 
 {% block content %}
-  <h1>Submit Your GitHub and/or Stack Overflow Username</h1>
-  <form method="POST" action="{{ url_for('index') }}">  <!-- Corrected endpoint -->
-    {{ form.hidden_tag() }}
-    <div class="form-group">
-      {{ form.github_username.label }}<br>
-      {{ form.github_username(size=32) }}
-    </div>
-    <div class="form-group">
-      {{ form.stackoverflow_username.label }}<br>
-      {{ form.stackoverflow_username(size=32) }}
-    </div>
-    <div class="form-group">
-      {{ form.submit() }}
-    </div>
-  </form>
+    <h2>Enter Your GitHub or Stack Overflow Username</h2>
+
+    <form method="POST" action="{{ url_for('index') }}">
+        {{ form.hidden_tag() }}  <!-- This is important for CSRF protection -->
+
+        <label for="github_username">GitHub Username:</label>
+        {{ form.github_username() }}  <!-- Use Flask-WTF to render the field -->
+        <br><br>
+
+        <label for="stackoverflow_username">Stack Overflow Username:</label>
+        {{ form.stackoverflow_username() }}  <!-- Use Flask-WTF to render the field -->
+        <br><br>
+
+        {{ form.submit() }}  <!-- Use Flask-WTF for the submit button -->
+    </form>
 {% endblock %}

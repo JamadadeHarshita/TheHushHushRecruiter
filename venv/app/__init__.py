@@ -19,3 +19,21 @@ def create_app():
     from app import routes 
     
     return app
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

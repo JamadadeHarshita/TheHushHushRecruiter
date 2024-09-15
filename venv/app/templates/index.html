@@ -1,21 +1,12 @@
 {% extends 'base.html' %}
 
-{% block title %}Enter Your Username{% endblock %}
+{% block title %}Machine Learning Model{% endblock %}
 
 {% block content %}
-    <h2>Enter Your GitHub or Stack Overflow Username</h2>
+    <h2>Run Machine Learning Model</h2>
 
+    <!-- Button to run the machine learning model and display top candidates -->
     <form method="POST" action="{{ url_for('index') }}">
-        {{ form.hidden_tag() }}  <!-- This is important for CSRF protection -->
-
-        <label for="github_username">GitHub Username:</label>
-        {{ form.github_username() }}  <!-- Use Flask-WTF to render the field -->
-        <br><br>
-
-        <label for="stackoverflow_username">Stack Overflow Username:</label>
-        {{ form.stackoverflow_username() }}  <!-- Use Flask-WTF to render the field -->
-        <br><br>
-
-        {{ form.submit() }}  <!-- Use Flask-WTF for the submit button -->
+        <button type="submit">Run Machine Learning Model and Get Top Candidates</button>
     </form>
 {% endblock %}

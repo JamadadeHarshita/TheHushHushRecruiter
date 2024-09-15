@@ -1,15 +1,24 @@
-from flask import render_template, redirect, url_for, request
+from flask import render_template, redirect, url_for, request, flash
 from app.models import Submission, Feedback, db  # Assuming you have these models
 from app.forms import UsernameForm
 from flask_mail import Message
 from app import mail
+from flask import session
+import logging
+
+import random
+
+from store_selected_candidates import store_top_candidates
+from stack_main_ML import fetch_users_to_dataframe
+from store_selected_candidates import get_top_candidates
 
 
 # Send the test link to eligible users via email
-def send_test_link_email(username):
-    recipient_email = "jamadadeharshita@gmail.com"  # Send to this email for testing
-    msg = Message("Coding Challenge Invitation",
-                  recipients=[recipient_email])
+def send_test_link_email(username, recipient_email="jamadadeharshita@gmail.com"):
+    msg = Message(
+        subject="Coding Challenge Invitation",
+        recipients=[recipient_email]
+    )
     
     msg.body = f"""
     Hi {username},
@@ -22,13 +31,44 @@ def send_test_link_email(username):
     Doodle Recruitment Team
     """
     
+    try:
+        # Attempt to send the email
+        mail.send(msg)
+        logging.info(f"Test link email sent successfully to {recipient_email}")
+        return f"Email successfully sent to {recipient_email}"
+    
+    except Exception as e:
+        # Log the error and return failure message
+        logging.error(f"Failed to send email to {recipient_email}: {e}")
+        return f"Failed to send email to {recipient_email}. Error: {e}"
+
+
+
+def send_confirmation_email(username):
+    recipient_email = "jamadadeharshita@gmail.com"  # Replace with the candidate's email (if available)
+
+    msg = Message("Coding Challenge Submission Confirmation",
+                  recipients=[recipient_email])
+
+    msg.body = f"""
+    Dear {username},
+
+    We have received your coding challenge submission. Thank you for submitting your solution.
+
+    Our team will review your submission and get back to you with feedback shortly.
+
+    Best regards,
+    Doodle Recruitment Team
+    """
+
     # Send the email using Flask-Mail
     mail.send(msg)
 
 
+
 # Send feedback emails to candidates
 def send_feedback_email(username, feedback_text=None, score=None):
-    recipient_email = "engineerdata061@gmail.com"  # Use your email for testing
+    recipient_email = "jamadadeharshita@gmail.com"  # Use your email for testing
     
     msg = Message("Feedback for Your Submission",
                   recipients=[recipient_email])
@@ -64,39 +104,45 @@ def register_routes(app):
     def index():
         form = UsernameForm()
 
+        # Check if the button to run the ML model is clicked
         if request.method == 'POST':
-            # Check if form is submitted
-            print("Form submitted")
+            # Run the machine learning model and store the top candidates
+            store_top_candidates()
 
-            # Check if the form validates
-            if form.validate_on_submit():
-                print("Form validated successfully")
-                github_username = form.github_username.data
-                stackoverflow_username = form.stackoverflow_username.data
+            # Fetch the top 5 candidates
+            top_candidates = get_top_candidates()
 
-                # Debugging
-                print(f"GitHub Username: {github_username}, Stack Overflow Username: {stackoverflow_username}")
+            # Send email to the top candidates
+            for index, row in top_candidates.iterrows():
+                send_test_link_email(row['Display Name'], 'jamadadeharshita@gmail.com')
 
-                # Check eligibility
-                eligible, message = check_eligibility(github_username, stackoverflow_username)
+            # Flash message to notify that top candidates have been selected
+            flash("Top candidates have been selected and emailed successfully.")
+            return render_template('top_candidates.html', candidates=top_candidates.to_dict(orient='records'))
 
-                # Debugging the result
-                print(f"Eligibility: {eligible}, Message: {message}")
-
-                if eligible:
-                    send_test_link_email(github_username or stackoverflow_username)
-                    return redirect(url_for('submission_confirmation'))
-                else:
-                    return render_template('eligibility_result.html', message=message)
-            else:
-                print("Form validation failed")
-        
-        # If it's a GET request or the form is invalid, render the index page
         return render_template('index.html', form=form)
+
+    
+
+    @app.route('/top_candidates')
+    def top_candidates():
+        return render_template('top_candidates.html')
 
     @app.route('/test_link')
     def test_link():
-        return render_template('coding_challenge.html')
+        challenges = [
+            "Challenge 1: Write a function to reverse a string.",
+            "Challenge 2: Write a function to find the sum of an array.",
+            "Challenge 3: Write a function to check if a number is prime."
+        ]
+
+        selected_challenge = random.choice(challenges)
+        
+        # Store the selected challenge in the session
+        session['challenge'] = selected_challenge
+
+        return render_template('coding_challenge.html', challenge=selected_challenge)
+
 
     @app.route('/submit_code', methods=['POST'])
     def submit_code():
@@ -109,6 +155,11 @@ def register_routes(app):
             submission = Submission(username=username, code=code)
             db.session.add(submission)
             db.session.commit()
+
+                    # Send a confirmation email to the user after submission
+            send_confirmation_email(username)
+
+            return render_template('solution_confirmation.html')  # Create this template for confirmation
             
             return redirect(url_for('evaluation'))
         except Exception as e:
@@ -146,6 +197,8 @@ def register_routes(app):
     def submission_confirmation():
         email = "engineerdata061@gmail.com"  # Change this to dynamically use the user's email if needed
         return render_template('submission_confirmation.html', email=email)
+    
+    
 
     
 

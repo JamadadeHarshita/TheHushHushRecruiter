@@ -4,11 +4,15 @@
 
 {% block content %}
   <h1>Submit Your Coding Challenge</h1>
-  
+
+  <!-- Display the selected coding challenge -->
+  <h3>Your Challenge:</h3>
+  <p>{{ challenge }}</p>  <!-- Display the randomly selected challenge here -->
+
   {% if error %}
     <p style="color: red;">{{ error }}</p>
   {% endif %}
-  
+
   <form method="POST" action="{{ url_for('submit_code') }}">
     <div class="form-group">
       <label for="code">Enter your code:</label><br>

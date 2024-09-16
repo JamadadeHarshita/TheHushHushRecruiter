@@ -5,6 +5,7 @@ from flask_mail import Message
 from app import mail
 from flask import session
 import logging
+import sqlite3
 
 import random
 
@@ -148,20 +149,34 @@ def register_routes(app):
     def submit_code():
         try:
             code = request.form.get('code')
-            username = "mock_user"  # Replace with actual logic to get the username
+            
             if not code:
                 return render_template('coding_challenge.html', error="No code submitted. Please enter your code.")
             
-            submission = Submission(username=username, code=code)
-            db.session.add(submission)
-            db.session.commit()
+            
+            conn = sqlite3.connect('stackoverflow_users.db')
+            c = conn.cursor()
 
+                        # Get the user ID and username (you can modify this to fetch from the session or database)
+            user_id = session.get('id')
+            username = session.get('username')
+
+            user_id = int(user_id)
+
+            # Insert the submitted code and user's ID into the 'submissions' table
+            c.execute('''
+                INSERT INTO submissions (id, username, code) 
+                VALUES (?, ?, ?)
+            ''', (user_id, username, code))
+
+            conn.commit()
+            conn.close()
                     # Send a confirmation email to the user after submission
             send_confirmation_email(username)
 
             return render_template('solution_confirmation.html')  # Create this template for confirmation
             
-            return redirect(url_for('evaluation'))
+
         except Exception as e:
             print("An error occurred:", e)
             return render_template('coding_challenge.html', error="An internal error occurred. Please try again.")

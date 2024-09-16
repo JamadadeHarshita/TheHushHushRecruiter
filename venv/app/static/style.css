@@ -1,40 +1,206 @@
-/* app/static/style.css */
+/* Apply a gradient background color to the entire page */
 body {
     font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
+    background: linear-gradient(135deg, #e3d21dc1, #66ccff); /* Gradient background */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
     margin: 0;
-    padding: 0;
+    position: relative; /* Required for absolute positioning of background text */
+}
+/* Style the background text */
+.background-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: rgba(210, 90, 15, 0.212); /* Light color for visibility */
+    font-size: 150px; /* Adjust size as needed */
+    font-weight: bold;
+    z-index: -1; /* Place behind the login container */
 }
 
-.container {
-    width: 80%;
-    margin: auto;
-    overflow: hidden;
+/* Style for the login container */
+.login-container {
+    background: #ffffff; /* Background color for the login form */
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 300px;
+    text-align: center;
+    z-index: 1; /* Ensure it's on top of the background text */
 }
 
-h1 {
+header {
+    margin-bottom: 20px;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+form label {
+    margin-bottom: 5px;
     color: #333;
 }
 
-.form-group {
+form input {
     margin-bottom: 15px;
-}
-
-label {
-    display: block;
-    font-weight: bold;
-}
-
-textarea {
-    width: 100%;
     padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+form button {
+    padding: 10px;
+    background: #1ca8ee;
+    border: none;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+form button:hover {
+    background: #17a2b8;
+}
+
+/* Styling for Candidate details page*/
+
+/* General body styles */
+body {
+    font-family: Arial, sans-serif;
+    background: #f0f2f5; /* Light grey background */
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    color: #333;
+}
+
+/* Header styling */
+.site-header {
+    background: #1ca8ee; /* Company color */
+    color: #fff;
+    width: 100%;
+    padding: 20px;
+    text-align: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+}
+
+.site-header h1 {
+    margin: 0;
+    font-size: 36px;
+}
+
+/* Container for the main content */
+.content-container {
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    width: 80%;
+    max-width: 1200px;
+    margin: 80px auto 20px; /* Margin to account for fixed header */
+    text-align: center;
+}
+
+/* Table styling */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+    border: 1px solid #ddd;
+}
+
+th {
+    background-color: #f4f4f4;
+}
+
+td {
+    background-color: #fafafa;
+}
+
+/* Styling for the feedback form */
+form {
+    margin-top: 20px;
+    text-align: center;
+}
+
+form textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 10px;
     font-size: 16px;
 }
 
-input[type="submit"] {
-    padding: 10px 20px;
-    background-color: #5cb85c;
+form button {
+    padding: 12px;
+    background: #1ca8ee;
     border: none;
-    color: white;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 16px;
     cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+form button:hover {
+    background: #17a2b8;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .content-container {
+        width: 95%;
+        padding: 20px;
+    }
+
+    table {
+        font-size: 14px;
+    }
+
+    form textarea, form button {
+        font-size: 14px;
+    }
+}
+
+.container {
+    text-align: center;
+    padding: 50px;
+    background-color: #f0f0f0;
+    border-radius: 10px;
+    margin: 100px auto;
+    width: 50%;
+    box-shadow: 0px 0px 10px #aaa;
+}
+
+h2 {
+    color: #28a745;
+}
+
+p {
+    font-size: 1.2em;
+    margin-bottom: 20px;
+}
+
+a {
+    text-decoration: none;
+    color: #007bff;
+    font-weight: bold;
 }

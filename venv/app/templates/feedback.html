@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}Provide Feedback{% endblock %}
+
+{% block content %}
+
+  <h1>Feedback for Submission</h1>
+
+  <h3>User Details:</h3>
+  <p><strong>User ID:</strong> {{ user_id }}</p>  <!-- Use user_id instead of submission.username -->
+  <p><strong>Username:</strong> {{ username }}</p>  <!-- Use username instead of submission.username -->
+
+  <h3>Submitted Code:</h3>
+  <pre>{{ code }}</pre>  <!-- Use code instead of submission.code -->
+
+  <form method="POST">
+      <label for="feedback">Feedback:</label>
+      <textarea name="feedback" id="feedback" rows="5" required></textarea>
+
+      <br>
+
+      <label for="score">Score:</label>
+      <input type="number" name="score" id="score" required>
+
+      <br><br>
+
+      <button type="submit">Submit Feedback</button>
+  </form>
+{% endblock %}

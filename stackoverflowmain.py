@@ -3,6 +3,7 @@ import time
 import re
 import sqlite3
 
+
 # Function to fetch user data from the Stack Exchange API
 def fetch_stack_overflow_data(page):
     base_url = f'https://api.stackexchange.com/2.3/users'
@@ -41,7 +42,7 @@ user_records = []
 print("hello")
 
 # Fetch data until page 10
-for page_number in range(1, 10):
+for page_number in range(1, 5):
     # Print status
     print(f"Requesting page {page_number}/10")
 

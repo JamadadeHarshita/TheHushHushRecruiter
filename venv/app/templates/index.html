@@ -3,10 +3,16 @@
 {% block title %}Machine Learning Model{% endblock %}
 
 {% block content %}
-    <h2>Run Machine Learning Model</h2>
+    <header>
+        <img src="venv\app\static\logo.png" alt="Logo" class="logo">
+        <h1>doodle.</h1>
+    </header>
+
+
 
     <!-- Button to run the machine learning model and display top candidates -->
+    <div class="background-text">Doodle</div>
     <form method="POST" action="{{ url_for('index') }}">
-        <button type="submit">Run Machine Learning Model and Get Top Candidates</button>
+        <button class="button-51" role="button" >Find Top Candidates</button>
     </form>
 {% endblock %}

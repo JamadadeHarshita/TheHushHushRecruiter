@@ -1,17 +1,23 @@
-{% extends 'base.html' %}
+{% extends 'base.html' %}  <!-- Inherit from base.html -->
 
-{% block title %}Evaluation{% endblock %}
+{% block title %}Evaluation{% endblock %}  <!-- Define the title block once -->
 
 {% block content %}
   <h1>Evaluation Page</h1>
-  <ul>
-    {% for submission in submissions %}
-      <li>
-        <strong>{{ submission.username }}</strong> submitted code at {{ submission.timestamp }}<br>
-        <pre>{{ submission.code }}</pre>
-        <a href="{{ url_for('feedback', submission_id=submission.id) }}">Provide Feedback</a>
-      </li>
-    {% endfor %}
-  </ul>
-{% endblock %}
 
+
+
+  {% if submissions %}
+
+  <!-- Now loop through submissions and render them -->
+  {% for submission in submissions %}
+      <strong>{{ submission[1] }}</strong> submitted code at {{ submission[3] }}<br>
+      <pre>{{ submission[2] }}</pre>
+      <a href="{{ url_for('feedback', submission_id=submission[0]) }}">Provide Feedback</a>
+      <br><br>
+  {% endfor %}
+
+  {% else %}
+    <p>No submissions found.</p>
+  {% endif %}
+{% endblock %}

@@ -1,14 +1,48 @@
 /* Apply a gradient background color to the entire page */
+
+/* Header styling */
+header {
+    background: #dad8d2; /* Company color */
+    color: #fff;
+    width: 100%;
+    padding: 20px;
+    text-align: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Styling for the logo */
+.logo {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    height: 60px; /* Adjust the height as per your logo */
+}
+
+/* Update site header styling */
+.site-header h1 {
+    margin: 0;
+    font-size: 36px;
+    text-align: center; /* Center the text within the available space */
+}
+
 body {
     font-family: Arial, sans-serif;
-    background: linear-gradient(135deg, #e3d21dc1, #66ccff); /* Gradient background */
+    background: #dad8d2; /* Gradient background */
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
     margin: 0;
     position: relative; /* Required for absolute positioning of background text */
+    color: #333; /* Ensures text color is visible */
 }
+
 /* Style the background text */
 .background-text {
     position: absolute;
@@ -16,7 +50,7 @@ body {
     left: 50%;
     transform: translate(-50%, -50%);
     text-align: center;
-    color: rgba(210, 90, 15, 0.212); /* Light color for visibility */
+    color: rgba(45, 69, 205, 0.352); /* Light color for visibility */
     font-size: 150px; /* Adjust size as needed */
     font-weight: bold;
     z-index: -1; /* Place behind the login container */
@@ -31,10 +65,6 @@ body {
     width: 300px;
     text-align: center;
     z-index: 1; /* Ensure it's on top of the background text */
-}
-
-header {
-    margin-bottom: 20px;
 }
 
 form {
@@ -56,7 +86,7 @@ form input {
 
 form button {
     padding: 10px;
-    background: #1ca8ee;
+    background:#8cb89f;
     border: none;
     border-radius: 4px;
     color: #fff;
@@ -65,15 +95,15 @@ form button {
 }
 
 form button:hover {
-    background: #17a2b8;
+    background: #0d3330;
 }
 
 /* Styling for Candidate details page*/
 
 /* General body styles */
-body {
+body.candidate-page {
     font-family: Arial, sans-serif;
-    background: #f0f2f5; /* Light grey background */
+    background: #dad8d2; /* Ensure the gradient applies to the candidate details page */
     margin: 0;
     padding: 0;
     display: flex;
@@ -85,8 +115,8 @@ body {
 
 /* Header styling */
 .site-header {
-    background: #1ca8ee; /* Company color */
-    color: #fff;
+    background: #8cb89f; /* Company color */
+    color: #0d3330;
     width: 100%;
     padding: 20px;
     text-align: center;
@@ -135,34 +165,7 @@ td {
 }
 
 /* Styling for the feedback form */
-form {
-    margin-top: 20px;
-    text-align: center;
-}
 
-form textarea {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    margin-bottom: 10px;
-    font-size: 16px;
-}
-
-form button {
-    padding: 12px;
-    background: #1ca8ee;
-    border: none;
-    border-radius: 4px;
-    color: #fff;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background 0.3s ease;
-}
-
-form button:hover {
-    background: #17a2b8;
-}
 
 /* Responsive design */
 @media (max-width: 768px) {
@@ -183,15 +186,15 @@ form button:hover {
 .container {
     text-align: center;
     padding: 50px;
-    background-color: #f0f0f0;
-    border-radius: 10px;
+    background-color: #a6a6a6;
+    border-radius: 50% 20% / 10% 40%;;
     margin: 100px auto;
     width: 50%;
     box-shadow: 0px 0px 10px #aaa;
 }
 
 h2 {
-    color: #28a745;
+    color: #0d3330;
 }
 
 p {
@@ -201,6 +204,6 @@ p {
 
 a {
     text-decoration: none;
-    color: #007bff;
+    color:#8cb89f;
     font-weight: bold;
 }

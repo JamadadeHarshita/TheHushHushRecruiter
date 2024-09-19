@@ -6,12 +6,56 @@ from app import mail
 from flask import session
 import logging
 import sqlite3
+import uuid
+import pickle
+import pandas as pd
+
+
+
 
 import random
 
 from store_selected_candidates import store_top_candidates
-from stack_main_ML import fetch_users_to_dataframe
+# from stack_main_ML import fetch_users_to_dataframe
 from store_selected_candidates import get_top_candidates
+
+
+
+# Load the KMeans model from the pkl file
+with open('kmeans_model.pkl', 'rb') as model_file:
+    kmeans_model = pickle.load(model_file)
+
+
+def fetch_users():
+    conn = sqlite3.connect('stackoverflow_users.db')
+    df = pd.read_sql_query("SELECT * FROM dummyusers", conn)
+    conn.close()
+    return df
+
+
+
+# Function to make predictions
+def predict_candidates(df):
+    # Assuming df has relevant columns 'Reputation', 'Upvotes', 'Bronze', 'Silver', 'Gold'
+    features = df[['reputation', 'up_vote_count', 'bronze_badges', 'silver_badges', 'gold_badges']]
+
+    # Standardize the features
+    from sklearn.preprocessing import StandardScaler
+    sc = StandardScaler()
+    scaled_features = sc.fit_transform(features)
+
+    # Make predictions using the KMeans model
+    df['Prediction'] = kmeans_model.predict(scaled_features)
+    top_candidates = df[df['Prediction'] == 1][['_id','display_name', 'reputation', 'up_vote_count', 'bronze_badges', 'silver_badges', 'gold_badges']]
+    return top_candidates  # Assuming '1' is the cluster for top candidates
+
+
+
+def get_or_create_uuid():
+    if 'uuid' not in session:
+        # Generate a new UUID
+        session['uuid'] = str(uuid.uuid4())
+    return session['uuid']
 
 
 # Send the test link to eligible users via email
@@ -101,27 +145,56 @@ def send_feedback_email(username, feedback_text=None, score=None):
 
 
 def register_routes(app):
+    # @app.route('/', methods=['GET', 'POST'])
+    # def index():
+    #     form = UsernameForm()
+
+    #     # Check if the button to run the ML model is clicked
+    #     if request.method == 'POST':
+    #         # Run the machine learning model and store the top candidates
+    #         store_top_candidates()
+
+    #         # Fetch the top 5 candidates
+    #         top_candidates = get_top_candidates()
+
+    #         # Send email to the top candidates
+    #         for index, row in top_candidates.iterrows():
+    #             send_test_link_email(row['Display Name'], 'alistairpereira241999@gmail.com')
+
+    #         # Flash message to notify that top candidates have been selected
+    #         flash("Top candidates have been selected and emailed successfully.")
+
+    #         # Save top candidates' username in session
+    #         session['usernames'] = [row['Display Name'] for index, row in top_candidates.iterrows()]
+            
+    #         flash("Top candidates have been selected. Their usernames are stored in the session.")
+    #         return render_template('top_candidates.html', candidates=top_candidates.to_dict(orient='records'))
+
+    #     return render_template('index.html', form=form)
+
+
     @app.route('/', methods=['GET', 'POST'])
     def index():
-        form = UsernameForm()
-
-        # Check if the button to run the ML model is clicked
         if request.method == 'POST':
-            # Run the machine learning model and store the top candidates
-            store_top_candidates()
+            # Fetch users from the database
+            users_df = fetch_users()
 
-            # Fetch the top 5 candidates
-            top_candidates = get_top_candidates()
+            # Use the ML model to predict top candidates
+            top_candidates = predict_candidates(users_df)
 
-            # Send email to the top candidates
+
+            # Store the top candidates in the session
+            session['usernames'] = top_candidates['display_name'].tolist()
+
+            # Notify the top candidates
             for index, row in top_candidates.iterrows():
-                send_test_link_email(row['Display Name'], 'jamadadeharshita@gmail.com')
+                send_test_link_email(row['display_name'], 'jamadadeharshita@gmail.com')
 
-            # Flash message to notify that top candidates have been selected
-            flash("Top candidates have been selected and emailed successfully.")
+            # Return the top candidates to the UI
             return render_template('top_candidates.html', candidates=top_candidates.to_dict(orient='records'))
 
-        return render_template('index.html', form=form)
+        return render_template('index.html')
+
 
     
 
@@ -145,72 +218,198 @@ def register_routes(app):
         return render_template('coding_challenge.html', challenge=selected_challenge)
 
 
+    # @app.route('/submit_code', methods=['POST'])
+    # def submit_code():
+    #     try:
+    #         code = request.form.get('code')
+            
+    #         if not code:
+    #             return render_template('coding_challenge.html', error="No code submitted. Please enter your code.")
+            
+    #                 # Automatically get the username from the session
+    #         username = session.get('username', 'unknown_user')  # Default to 'unknown_user' if not set
+            
+            
+    #         conn = sqlite3.connect('stackoverflow_users.db')
+    #         c = conn.cursor()
+
+    #                     # Get the user ID and username (you can modify this to fetch from the session or database)
+    #         user_id = get_or_create_uuid()
+
+
+    #         # Insert the submitted code and user's ID into the 'submissions' table
+    #         c.execute('''
+    #             INSERT INTO submissions_1 (id, username, code) 
+    #             VALUES (?, ?, ?)
+    #         ''', (user_id, username, code))
+
+    #         conn.commit()
+    #         conn.close()
+    #                 # Send a confirmation email to the user after submission
+    #         send_confirmation_email(username)
+
+    #         return render_template('solution_confirmation.html')  # Create this template for confirmation
+            
+
+    #     except Exception as e:
+    #         print("An error occurred:", e)
+    #         return render_template('coding_challenge.html', error="An internal error occurred. Please try again.")
+
     @app.route('/submit_code', methods=['POST'])
     def submit_code():
         try:
             code = request.form.get('code')
+            entered_username = request.form.get('username')  # Get the username from the user input
             
             if not code:
                 return render_template('coding_challenge.html', error="No code submitted. Please enter your code.")
             
+            if not entered_username:
+                return render_template('coding_challenge.html', error="No username entered. Please provide your username.")
             
             conn = sqlite3.connect('stackoverflow_users.db')
             c = conn.cursor()
 
-                        # Get the user ID and username (you can modify this to fetch from the session or database)
-            user_id = session.get('id')
-            username = session.get('username')
-
-            user_id = int(user_id)
-
-            # Insert the submitted code and user's ID into the 'submissions' table
+            # Check if the entered username exists in the selected_candidates table
             c.execute('''
-                INSERT INTO submissions (id, username, code) 
+                SELECT * FROM selected_candidates WHERE "Display Name" = ?
+            ''', (entered_username,))
+            
+            candidate = c.fetchone()
+
+            if not candidate:
+                # If no candidate found with the entered username, show an error
+                conn.close()
+                return render_template('coding_challenge.html', error="You are not an eligible candidate. Please check your username.")
+            
+            # If the candidate exists, proceed to get the user ID and insert the submission
+            user_id = candidate[0]  # Assuming the first column is the user ID
+            
+            # Insert the submitted code and user's ID into the 'submissions_1' table
+            c.execute('''
+                INSERT INTO submissions_1 (id, username, code) 
                 VALUES (?, ?, ?)
-            ''', (user_id, username, code))
+            ''', (user_id, entered_username, code))
 
             conn.commit()
             conn.close()
-                    # Send a confirmation email to the user after submission
-            send_confirmation_email(username)
+
+            # Send a confirmation email to the user after submission
+            send_confirmation_email(entered_username)
 
             return render_template('solution_confirmation.html')  # Create this template for confirmation
-            
 
         except Exception as e:
             print("An error occurred:", e)
             return render_template('coding_challenge.html', error="An internal error occurred. Please try again.")
 
+
+    # @app.route('/evaluation')
+    # def evaluation():
+    #     submissions = Submission.query.all()
+    #     return render_template('evaluation.html', submissions=submissions)
+
+
+
+
     @app.route('/evaluation')
     def evaluation():
-        submissions = Submission.query.all()
-        return render_template('evaluation.html', submissions=submissions)
+        try:
+            # Connect to the SQLite database
+            conn = sqlite3.connect('stackoverflow_users.db')
+            c = conn.cursor()
+
+            # Fetch all submissions from the 'submissions_1' table
+            c.execute("SELECT id, username, code, submission_time FROM submissions_1")
+            submissions = c.fetchall()
+
+            conn.close()
+
+            # Check if there are any submissions
+            if not submissions:
+                return render_template('error.html', message="No submissions found.")
+
+            # Pass the submissions to the evaluation.html template
+            return render_template('evaluation.html', submissions=submissions)
+
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            return render_template('error.html', message="An internal error occurred. Please try again.")
+
 
     # Add the feedback route here
-    @app.route('/feedback/<int:submission_id>', methods=['GET', 'POST'])
+    # @app.route('/feedback/<int:submission_id>', methods=['GET', 'POST'])
+    # def feedback(submission_id):
+    #     submission = Submission.query.get_or_404(submission_id)
+
+    #     if request.method == 'POST':
+    #         feedback_text = request.form.get('feedback')
+    #         score = int(request.form.get('score'))
+
+    #         feedback = Feedback(submission_id=submission.id, feedback_text=feedback_text, score=score)
+    #         db.session.add(feedback)
+    #         db.session.commit()
+
+    #         # Send feedback email
+    #         send_feedback_email(submission.username, feedback_text, score)
+
+    #         print(f"Feedback submitted for submission {submission_id}: {feedback_text} with score {score}")
+
+    #         return redirect(url_for('evaluation'))
+
+    #     return render_template('feedback.html', submission=submission)
+
+
+    @app.route('/manager')
+    def manager_dashboard():
+        conn = sqlite3.connect('stackoverflow_users.db')
+        c = conn.cursor()
+
+        # Fetch submissions data without code
+        c.execute("SELECT id, username, submission_time FROM submissions_1")
+        submissions = c.fetchall()
+        conn.close()
+
+        return render_template('manager.html', submissions=submissions)
+
+    @app.route('/feedback/<submission_id>', methods=['GET', 'POST'])
     def feedback(submission_id):
-        submission = Submission.query.get_or_404(submission_id)
+        conn = sqlite3.connect('stackoverflow_users.db')
+        c = conn.cursor()
+
+        # Fetch the submission details based on submission_id
+        c.execute('SELECT id, username, code FROM submissions_1 WHERE id = ?', (submission_id,))
+        submission_data = c.fetchone()
+
+        if not submission_data:
+            return render_template('error.html', message="Submission not found.")
+
+        user_id, username, code = submission_data
 
         if request.method == 'POST':
             feedback_text = request.form.get('feedback')
             score = int(request.form.get('score'))
 
-            feedback = Feedback(submission_id=submission.id, feedback_text=feedback_text, score=score)
-            db.session.add(feedback)
-            db.session.commit()
+            # Insert feedback linked to the submission_id
+            c.execute('''
+                INSERT INTO feedback (submission_id, feedback_text, score)
+                VALUES (?, ?, ?)
+            ''', (submission_id, feedback_text, score))
 
-            # Send feedback email
-            send_feedback_email(submission.username, feedback_text, score)
+            conn.commit()
+            conn.close()
 
-            print(f"Feedback submitted for submission {submission_id}: {feedback_text} with score {score}")
+            send_feedback_email(username, feedback_text, score)
 
             return redirect(url_for('evaluation'))
 
-        return render_template('feedback.html', submission=submission)
-    
+        return render_template('feedback.html', submission_id=submission_id, user_id=user_id, username=username, code=code)
+
+
+        
     @app.route('/submission_confirmation')
     def submission_confirmation():
-        email = "engineerdata061@gmail.com"  # Change this to dynamically use the user's email if needed
+        email = "jamadadeharshita@gmail.com"  # Change this to dynamically use the user's email if needed
         return render_template('submission_confirmation.html', email=email)
     
     

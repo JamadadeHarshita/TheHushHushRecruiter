@@ -48,16 +48,17 @@ def create_app():
 
 # # Create table if it doesn't exist
 # c.execute('''
-#     CREATE TABLE IF NOT EXISTS dummyusers (
+#     CREATE TABLE IF NOT EXISTS fetched (
 #         _id INTEGER PRIMARY KEY,
 #         display_name TEXT,
-#         reputation INTEGER,
+#         Reputation INTEGER,
 #         email TEXT,
-#         up_vote_count INTEGER,
+#         Upvotes INTEGER,
 #         down_vote_count INTEGER,
-#         bronze_badges INTEGER,
-#         silver_badges INTEGER,
-#         gold_badges INTEGER
+#         Bronze INTEGER,
+#         Silver INTEGER,
+#         Gold INTEGER
+
 #     )
 # ''')
 
@@ -82,8 +83,7 @@ def create_app():
 
 #         # Insert data into the SQLite database
 #         c.execute('''
-#             INSERT OR REPLACE INTO dummyusers (_id, display_name, reputation, email, up_vote_count,
-#         down_vote_count , bronze_badges, silver_badges, gold_badges)
+#             INSERT OR REPLACE INTO fetched (_id, display_name, Reputation, email, Upvotes, down_vote_count, Bronze, Silver, Gold)
 #             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 #         ''', (
 #             user['_id'], 
@@ -133,6 +133,30 @@ def create_submissions_table():
 
 # Call this function to initialize or update the database
 create_submissions_table()
+
+def add_feedback_columns():
+    conn = sqlite3.connect('stackoverflow_users.db')
+    c = conn.cursor()
+
+    # Add 'feedback' and 'score' columns if they don't already exist
+    try:
+        c.execute("ALTER TABLE submissions_1 ADD COLUMN feedback TEXT;")
+    except sqlite3.OperationalError:
+        # If the column already exists, skip the operation
+        print("The 'feedback' column already exists.")
+
+    try:
+        c.execute("ALTER TABLE submissions_1 ADD COLUMN score INTEGER;")
+    except sqlite3.OperationalError:
+        # If the column already exists, skip the operation
+        print("The 'score' column already exists.")
+
+    conn.commit()
+    conn.close()
+
+# Call this function to ensure columns are present
+add_feedback_columns()
+
 
 
 

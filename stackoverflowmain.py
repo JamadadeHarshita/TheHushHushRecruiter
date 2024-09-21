@@ -58,8 +58,8 @@ for page_number in range(1, 5):
 
         # Insert data into the SQLite database
         c.execute('''
-            INSERT OR REPLACE INTO users (_id, display_name, reputation, email, up_vote_count,
-        down_vote_count , bronze_badges, silver_badges, gold_badges)
+            INSERT OR REPLACE INTO users (ID, "Display Name", Reputation, Email, Upvotes,
+        Downvotes ,Bronze, Silver, Gold)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             user['_id'], 

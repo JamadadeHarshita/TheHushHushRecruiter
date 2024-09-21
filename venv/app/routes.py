@@ -2,6 +2,7 @@ from flask import render_template, redirect, url_for, request, flash
 from app.models import Submission, Feedback, db  # Assuming you have these models
 from app.forms import UsernameForm
 from flask_mail import Message
+from sklearn.preprocessing import StandardScaler
 from app import mail
 from flask import session
 import logging
@@ -22,13 +23,13 @@ from store_selected_candidates import get_top_candidates
 
 
 # Load the KMeans model from the pkl file
-with open('kmeans_model.pkl', 'rb') as model_file:
-    kmeans_model = pickle.load(model_file)
+with open('logreg_models.pkl', 'rb') as model_file:
+    logreg_model = pickle.load(model_file)
 
 
 def fetch_users():
     conn = sqlite3.connect('stackoverflow_users.db')
-    df = pd.read_sql_query("SELECT * FROM dummyusers", conn)
+    df = pd.read_sql_query("SELECT * FROM fetched", conn)
     conn.close()
     return df
 
@@ -36,19 +37,45 @@ def fetch_users():
 
 # Function to make predictions
 def predict_candidates(df):
-    # Assuming df has relevant columns 'Reputation', 'Upvotes', 'Bronze', 'Silver', 'Gold'
-    features = df[['reputation', 'up_vote_count', 'bronze_badges', 'silver_badges', 'gold_badges']]
+    # Ensure the DataFrame contains relevant columns
+    
+    # df.rename(columns={
+    #     'reputation': 'Reputation',
+    #     'up_vote_count': 'Upvotes',
+    #     'bronze_badges': 'Bronze',
+    #     'silver_badges': 'Silver',
+    #     'gold_badges': 'Gold'
+    # }, inplace=True)
 
+    print(df.columns)
+
+
+    # Select relevant features for prediction
+    features = df[['Reputation', 'Upvotes', 'Bronze', 'Silver', 'Gold']]
+    
     # Standardize the features
-    from sklearn.preprocessing import StandardScaler
-    sc = StandardScaler()
-    scaled_features = sc.fit_transform(features)
+    # sc = StandardScaler()
+    # scaled_features = sc.fit_transform(features)
 
-    # Make predictions using the KMeans model
-    df['Prediction'] = kmeans_model.predict(scaled_features)
-    top_candidates = df[df['Prediction'] == 1][['_id','display_name', 'reputation', 'up_vote_count', 'bronze_badges', 'silver_badges', 'gold_badges']]
-    return top_candidates  # Assuming '1' is the cluster for top candidates
+    # Make predictions using the logistic regression model
+    df['predicted_label'] = logreg_model.predict(features)
 
+    # Get prediction probabilities (commented out if not needed)
+    # df['probability_class_1'] = logreg_model.predict_proba(scaled_features)[:, 1]
+    print(df['predicted_label'] == 1)
+
+    # Filter the top candidates (assuming '1' is the positive class for top candidates)
+    # top_candidates = df[df['predicted_label'] == 1][['_id', 'display_name', 'Reputation', 'Upvotes', 'Bronze', 'Silver', 'Gold']]
+  
+    top_candidates = df[df['predicted_label'] == 1][[ '_id','display_name', 'Reputation', 'email', 'Upvotes', 'down_vote_count', 'Bronze','Silver', 'Gold' ]]
+    top_candidates = top_candidates.sort_values(by='Reputation', ascending=False)
+    print(top_candidates[['_id','display_name', 'Reputation', 'email', 'Upvotes', 'down_vote_count', 'Bronze','Silver', 'Gold']])
+
+    # Sort the candidates by the highest probability of being in class '1' (optional)
+    # top_candidates = top_candidates.sort_values(by='probability_class_1', ascending=False)
+
+    # Return the top candidates
+    return top_candidates.head(5)
 
 
 def get_or_create_uuid():
@@ -178,9 +205,14 @@ def register_routes(app):
         if request.method == 'POST':
             # Fetch users from the database
             users_df = fetch_users()
+            print("Fetching users...")
 
+            print("blabla")
             # Use the ML model to predict top candidates
             top_candidates = predict_candidates(users_df)
+            print("god")
+
+                    # Use the ML model to predict top candidates
 
 
             # Store the top candidates in the session
@@ -378,32 +410,65 @@ def register_routes(app):
         c = conn.cursor()
 
         # Fetch the submission details based on submission_id
-        c.execute('SELECT id, username, code FROM submissions_1 WHERE id = ?', (submission_id,))
+        c.execute('SELECT id, username, code, feedback, score FROM submissions_1 WHERE id = ?', (submission_id,))
         submission_data = c.fetchone()
 
         if not submission_data:
             return render_template('error.html', message="Submission not found.")
 
-        user_id, username, code = submission_data
+        user_id, username, code, feedback, score = submission_data
 
         if request.method == 'POST':
             feedback_text = request.form.get('feedback')
             score = int(request.form.get('score'))
 
-            # Insert feedback linked to the submission_id
+            # Update the feedback and score for the specific submission
             c.execute('''
-                INSERT INTO feedback (submission_id, feedback_text, score)
-                VALUES (?, ?, ?)
-            ''', (submission_id, feedback_text, score))
+                UPDATE submissions_1
+                SET feedback = ?, score = ?
+                WHERE id = ?
+            ''', (feedback_text, score, submission_id))
 
             conn.commit()
             conn.close()
 
+            # Send feedback email to the user
             send_feedback_email(username, feedback_text, score)
 
             return redirect(url_for('evaluation'))
 
-        return render_template('feedback.html', submission_id=submission_id, user_id=user_id, username=username, code=code)
+        return render_template('feedback.html', submission_id=submission_id, user_id=user_id, username=username, code=code, feedback=feedback, score=score)
+    # def feedback(submission_id):
+    #     conn = sqlite3.connect('stackoverflow_users.db')
+    #     c = conn.cursor()
+
+    #     # Fetch the submission details based on submission_id
+    #     c.execute('SELECT id, username, code FROM submissions_1 WHERE id = ?', (submission_id,))
+    #     submission_data = c.fetchone()
+
+    #     if not submission_data:
+    #         return render_template('error.html', message="Submission not found.")
+
+    #     user_id, username, code = submission_data
+
+    #     if request.method == 'POST':
+    #         feedback_text = request.form.get('feedback')
+    #         score = int(request.form.get('score'))
+
+    #         # Insert feedback linked to the submission_id
+    #         c.execute('''
+    #             INSERT INTO feedback (submission_id, feedback_text, score)
+    #             VALUES (?, ?, ?)
+    #         ''', (submission_id, feedback_text, score))
+
+    #         conn.commit()
+    #         conn.close()
+
+    #         send_feedback_email(username, feedback_text, score)
+
+    #         return redirect(url_for('evaluation'))
+
+    #     return render_template('feedback.html', submission_id=submission_id, user_id=user_id, username=username, code=code)
 
 
         

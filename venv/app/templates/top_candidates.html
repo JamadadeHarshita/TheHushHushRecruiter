@@ -4,32 +4,26 @@
 
 {% block content %}
     <h2>Top 5 Candidates</h2>
+    <h3>Emails Have been sent to the Respective Candidates!</h3>
 
-    <table border="1">
+    <table>
         <tr>
-            <th>ID</th>
-            <th>Candidate  Name</th>
-            <th>Email</th>
-            <th>Reputation</th>
-
+          <th>ID</th>
+          <th>Candidate Name</th>
+          <th>Email</th>
+          <th>Reputation</th>
         </tr>
-
-   
         {% for candidate in candidates %}
-        <!-- <tr>
-            <td>{{ candidate['ID'] }}</td>
-            <td>{{ candidate['Display Name'] }}</td>
-            <td>{{ candidate['Email'] }}</td>
-        </tr> -->
         <tr>
-            <td>{{ candidate['_id'] }}</td>
-            <td>{{ candidate['display_name'] }}</td>
-            <td>{{ candidate['email'] }}</td>
-            <td>{{ candidate['Reputation'] }}</td>
-
+          <td data-label="ID">{{ candidate['_id'] }}</td>
+          <td data-label="Candidate Name">{{ candidate['display_name'] }}</td>
+          <td data-label="Email">{{ candidate['email'] }}</td>
+          <td data-label="Reputation">{{ candidate['Reputation'] }}</td>
         </tr>
-
-
         {% endfor %}
-    </table>
+      </table>
+      
+
+
 {% endblock %}
+

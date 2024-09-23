@@ -6,14 +6,28 @@
   <h1>Manager Dashboard</h1>
 
   {% if submissions %}
-    <ul>
-      {% for submission in submissions %}
-        <li>
-          <strong>{{ submission[1] }}</strong> submitted code at {{ submission[2] }}<br> <!-- submission[1] is the username, submission[2] is the submission_time -->
-          <a href="{{ url_for('feedback', submission_id=submission[0]) }}">Evaluate</a> <!-- submission[0] is the id -->
-        </li>
-      {% endfor %}
-    </ul>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Username</th>
+          <th>Submission Time</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for submission in submissions %}
+          <tr>
+            <td>{{ submission[0] }}</td> <!-- submission[0] is the ID -->
+            <td>{{ submission[1] }}</td> <!-- submission[1] is the username -->
+            <td>{{ submission[2] }}</td> <!-- submission[2] is the submission_time -->
+            <td>
+              <a href="{{ url_for('feedback', submission_id=submission[0]) }}" class="btn btn-primary">Evaluate</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
   {% else %}
     <p>No submissions found.</p>
   {% endif %}

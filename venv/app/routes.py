@@ -1,6 +1,4 @@
 from flask import render_template, redirect, url_for, request, flash
-from app.models import Submission, Feedback, db  # Assuming you have these models
-from app.forms import UsernameForm
 from flask_mail import Message
 from sklearn.preprocessing import StandardScaler
 from app import mail
@@ -10,20 +8,11 @@ import sqlite3
 import uuid
 import pickle
 import pandas as pd
-
-
-
-
 import random
 
-from store_selected_candidates import store_top_candidates
-# from stack_main_ML import fetch_users_to_dataframe
-from store_selected_candidates import get_top_candidates
 
-
-
-# Load the KMeans model from the pkl file
-with open('logreg_models.pkl', 'rb') as model_file:
+# Load the model from the pkl file
+with open('logreg_model_.pkl', 'rb') as model_file:
     logreg_model = pickle.load(model_file)
 
 
@@ -37,15 +26,6 @@ def fetch_users():
 
 # Function to make predictions
 def predict_candidates(df):
-    # Ensure the DataFrame contains relevant columns
-    
-    # df.rename(columns={
-    #     'reputation': 'Reputation',
-    #     'up_vote_count': 'Upvotes',
-    #     'bronze_badges': 'Bronze',
-    #     'silver_badges': 'Silver',
-    #     'gold_badges': 'Gold'
-    # }, inplace=True)
 
     print(df.columns)
 
@@ -54,21 +34,21 @@ def predict_candidates(df):
     features = df[['Reputation', 'Upvotes', 'Bronze', 'Silver', 'Gold']]
     
     # Standardize the features
-    # sc = StandardScaler()
-    # scaled_features = sc.fit_transform(features)
+    sc = StandardScaler()
+    scaled_features = sc.fit_transform(features)
 
     # Make predictions using the logistic regression model
-    df['predicted_label'] = logreg_model.predict(features)
+    df['predicted_label'] = logreg_model.predict(scaled_features)
 
     # Get prediction probabilities (commented out if not needed)
     # df['probability_class_1'] = logreg_model.predict_proba(scaled_features)[:, 1]
     print(df['predicted_label'] == 1)
 
     # Filter the top candidates (assuming '1' is the positive class for top candidates)
-    # top_candidates = df[df['predicted_label'] == 1][['_id', 'display_name', 'Reputation', 'Upvotes', 'Bronze', 'Silver', 'Gold']]
+    top_candidates = df[df['predicted_label'] == 1][['_id', 'display_name', 'Reputation', 'Upvotes', 'Bronze', 'Silver', 'Gold']]
   
     top_candidates = df[df['predicted_label'] == 1][[ '_id','display_name', 'Reputation', 'email', 'Upvotes', 'down_vote_count', 'Bronze','Silver', 'Gold' ]]
-    top_candidates = top_candidates.sort_values(by='Reputation', ascending=False)
+    # top_candidates = top_candidates.sort_values(by='Reputation', ascending=False)
     print(top_candidates[['_id','display_name', 'Reputation', 'email', 'Upvotes', 'down_vote_count', 'Bronze','Silver', 'Gold']])
 
     # Sort the candidates by the highest probability of being in class '1' (optional)
@@ -117,7 +97,7 @@ def send_test_link_email(username, recipient_email="jamadadeharshita@gmail.com")
 
 
 def send_confirmation_email(username):
-    recipient_email = "jamadadeharshita@gmail.com"  # Replace with the candidate's email (if available)
+    recipient_email = "jamadadeharshita@gmail.com" 
 
     msg = Message("Coding Challenge Submission Confirmation",
                   recipients=[recipient_email])
@@ -125,7 +105,7 @@ def send_confirmation_email(username):
     msg.body = f"""
     Dear {username},
 
-    We have received your coding challenge submission. Thank you for submitting your solution.
+   Thank you for submitting your solution.
 
     Our team will review your submission and get back to you with feedback shortly.
 
@@ -172,33 +152,6 @@ def send_feedback_email(username, feedback_text=None, score=None):
 
 
 def register_routes(app):
-    # @app.route('/', methods=['GET', 'POST'])
-    # def index():
-    #     form = UsernameForm()
-
-    #     # Check if the button to run the ML model is clicked
-    #     if request.method == 'POST':
-    #         # Run the machine learning model and store the top candidates
-    #         store_top_candidates()
-
-    #         # Fetch the top 5 candidates
-    #         top_candidates = get_top_candidates()
-
-    #         # Send email to the top candidates
-    #         for index, row in top_candidates.iterrows():
-    #             send_test_link_email(row['Display Name'], 'alistairpereira241999@gmail.com')
-
-    #         # Flash message to notify that top candidates have been selected
-    #         flash("Top candidates have been selected and emailed successfully.")
-
-    #         # Save top candidates' username in session
-    #         session['usernames'] = [row['Display Name'] for index, row in top_candidates.iterrows()]
-            
-    #         flash("Top candidates have been selected. Their usernames are stored in the session.")
-    #         return render_template('top_candidates.html', candidates=top_candidates.to_dict(orient='records'))
-
-    #     return render_template('index.html', form=form)
-
 
     @app.route('/', methods=['GET', 'POST'])
     def index():
@@ -207,28 +160,60 @@ def register_routes(app):
             users_df = fetch_users()
             print("Fetching users...")
 
-            print("blabla")
             # Use the ML model to predict top candidates
             top_candidates = predict_candidates(users_df)
-            print("god")
-
-                    # Use the ML model to predict top candidates
 
 
             # Store the top candidates in the session
             session['usernames'] = top_candidates['display_name'].tolist()
 
+                    # Store top candidates in the 'selected_candidates' table
+            try:
+                conn = sqlite3.connect('stackoverflow_users.db')
+                c = conn.cursor()
+
+                # Create the table if it doesn't exist
+                c.execute('''
+                    CREATE TABLE IF NOT EXISTS topselected_candidates (
+                        ID INTEGER PRIMARY KEY,
+                        Display_Name TEXT,
+                        Reputation INTEGER,
+                        Email TEXT,
+                        Upvotes INTEGER,
+                        Downvotes INTEGER,
+                        Bronze INTEGER,
+                        Silver INTEGER,
+                        Gold INTEGER,
+                        ylabel INTEGER
+                    )
+                ''')
+
+                # Insert top candidates into the table
+                for index, row in top_candidates.iterrows():
+                    c.execute('''
+                        INSERT INTO topselected_candidates (ID,Display_Name, Reputation, Email, Upvotes, Downvotes, Bronze, Silver, Gold, ylabel)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ''', (row['_id'], row['display_name'], row['Reputation'], row['email'], row['Upvotes'], row['down_vote_count'], row['Bronze'], row['Silver'], row['Gold'], 1))  # Assuming ylabel is 1 for top candidates
+
+                conn.commit()
+                conn.close()
+                print("Top candidates stored successfully.")
+
+            except Exception as e:
+                    print(f"An error occurred while storing top candidates: {e}")
+
             # Notify the top candidates
             for index, row in top_candidates.iterrows():
                 send_test_link_email(row['display_name'], 'jamadadeharshita@gmail.com')
+
+                   # Flash a success message to display in the popup
+            flash('Emails have been successfully sent to the top candidates.')
 
             # Return the top candidates to the UI
             return render_template('top_candidates.html', candidates=top_candidates.to_dict(orient='records'))
 
         return render_template('index.html')
 
-
-    
 
     @app.route('/top_candidates')
     def top_candidates():
@@ -237,55 +222,15 @@ def register_routes(app):
     @app.route('/test_link')
     def test_link():
         challenges = [
-            "Challenge 1: Write a function to reverse a string.",
-            "Challenge 2: Write a function to find the sum of an array.",
-            "Challenge 3: Write a function to check if a number is prime."
+            "Problem Statement: You are given a list of meeting time intervals. Write a function to find the minimum number of meeting rooms required. Intervals may overlap. Example: Input: [(0, 30), (5, 10), (15, 20)] → Output: 2",
+            "Problem Statement: Given an unsorted array of integers, write a function to find the length of the longest consecutive sequence of numbers. Your algorithm should run in *O(n)* time.  Example: Input: [100, 4, 200, 1, 3, 2] → Output: 4 (sequence: 1, 2, 3, 4).",
+            "Problem Statement: Given two strings, write a function that checks if one string is a circular shift of the other. A circular shift means the string can be rotated any number of places and still match the other string. Example: Input: ('abcde', 'cdeab') → Output: True, Input: ('abc', 'acb') → Output: False"
         ]
-
-        selected_challenge = random.choice(challenges)
-        
+        selected_challenge = random.choice(challenges)    
         # Store the selected challenge in the session
         session['challenge'] = selected_challenge
-
         return render_template('coding_challenge.html', challenge=selected_challenge)
 
-
-    # @app.route('/submit_code', methods=['POST'])
-    # def submit_code():
-    #     try:
-    #         code = request.form.get('code')
-            
-    #         if not code:
-    #             return render_template('coding_challenge.html', error="No code submitted. Please enter your code.")
-            
-    #                 # Automatically get the username from the session
-    #         username = session.get('username', 'unknown_user')  # Default to 'unknown_user' if not set
-            
-            
-    #         conn = sqlite3.connect('stackoverflow_users.db')
-    #         c = conn.cursor()
-
-    #                     # Get the user ID and username (you can modify this to fetch from the session or database)
-    #         user_id = get_or_create_uuid()
-
-
-    #         # Insert the submitted code and user's ID into the 'submissions' table
-    #         c.execute('''
-    #             INSERT INTO submissions_1 (id, username, code) 
-    #             VALUES (?, ?, ?)
-    #         ''', (user_id, username, code))
-
-    #         conn.commit()
-    #         conn.close()
-    #                 # Send a confirmation email to the user after submission
-    #         send_confirmation_email(username)
-
-    #         return render_template('solution_confirmation.html')  # Create this template for confirmation
-            
-
-    #     except Exception as e:
-    #         print("An error occurred:", e)
-    #         return render_template('coding_challenge.html', error="An internal error occurred. Please try again.")
 
     @app.route('/submit_code', methods=['POST'])
     def submit_code():
@@ -304,7 +249,7 @@ def register_routes(app):
 
             # Check if the entered username exists in the selected_candidates table
             c.execute('''
-                SELECT * FROM selected_candidates WHERE "Display Name" = ?
+                SELECT * FROM topselected_candidates WHERE "Display_Name" = ?
             ''', (entered_username,))
             
             candidate = c.fetchone()
@@ -315,7 +260,7 @@ def register_routes(app):
                 return render_template('coding_challenge.html', error="You are not an eligible candidate. Please check your username.")
             
             # If the candidate exists, proceed to get the user ID and insert the submission
-            user_id = candidate[0]  # Assuming the first column is the user ID
+            user_id = candidate[0] 
             
             # Insert the submitted code and user's ID into the 'submissions_1' table
             c.execute('''
@@ -329,19 +274,11 @@ def register_routes(app):
             # Send a confirmation email to the user after submission
             send_confirmation_email(entered_username)
 
-            return render_template('solution_confirmation.html')  # Create this template for confirmation
+            return render_template('submission_confirmation.html')  # Create this template for confirmation
 
         except Exception as e:
             print("An error occurred:", e)
             return render_template('coding_challenge.html', error="An internal error occurred. Please try again.")
-
-
-    # @app.route('/evaluation')
-    # def evaluation():
-    #     submissions = Submission.query.all()
-    #     return render_template('evaluation.html', submissions=submissions)
-
-
 
 
     @app.route('/evaluation')
@@ -367,29 +304,6 @@ def register_routes(app):
         except Exception as e:
             print(f"An error occurred: {e}")
             return render_template('error.html', message="An internal error occurred. Please try again.")
-
-
-    # Add the feedback route here
-    # @app.route('/feedback/<int:submission_id>', methods=['GET', 'POST'])
-    # def feedback(submission_id):
-    #     submission = Submission.query.get_or_404(submission_id)
-
-    #     if request.method == 'POST':
-    #         feedback_text = request.form.get('feedback')
-    #         score = int(request.form.get('score'))
-
-    #         feedback = Feedback(submission_id=submission.id, feedback_text=feedback_text, score=score)
-    #         db.session.add(feedback)
-    #         db.session.commit()
-
-    #         # Send feedback email
-    #         send_feedback_email(submission.username, feedback_text, score)
-
-    #         print(f"Feedback submitted for submission {submission_id}: {feedback_text} with score {score}")
-
-    #         return redirect(url_for('evaluation'))
-
-    #     return render_template('feedback.html', submission=submission)
 
 
     @app.route('/manager')
@@ -435,61 +349,16 @@ def register_routes(app):
             # Send feedback email to the user
             send_feedback_email(username, feedback_text, score)
 
-            return redirect(url_for('evaluation'))
+            return redirect(url_for('index'))
 
         return render_template('feedback.html', submission_id=submission_id, user_id=user_id, username=username, code=code, feedback=feedback, score=score)
-    # def feedback(submission_id):
-    #     conn = sqlite3.connect('stackoverflow_users.db')
-    #     c = conn.cursor()
-
-    #     # Fetch the submission details based on submission_id
-    #     c.execute('SELECT id, username, code FROM submissions_1 WHERE id = ?', (submission_id,))
-    #     submission_data = c.fetchone()
-
-    #     if not submission_data:
-    #         return render_template('error.html', message="Submission not found.")
-
-    #     user_id, username, code = submission_data
-
-    #     if request.method == 'POST':
-    #         feedback_text = request.form.get('feedback')
-    #         score = int(request.form.get('score'))
-
-    #         # Insert feedback linked to the submission_id
-    #         c.execute('''
-    #             INSERT INTO feedback (submission_id, feedback_text, score)
-    #             VALUES (?, ?, ?)
-    #         ''', (submission_id, feedback_text, score))
-
-    #         conn.commit()
-    #         conn.close()
-
-    #         send_feedback_email(username, feedback_text, score)
-
-    #         return redirect(url_for('evaluation'))
-
-    #     return render_template('feedback.html', submission_id=submission_id, user_id=user_id, username=username, code=code)
 
 
-        
     @app.route('/submission_confirmation')
     def submission_confirmation():
         email = "jamadadeharshita@gmail.com"  # Change this to dynamically use the user's email if needed
         return render_template('submission_confirmation.html', email=email)
     
     
-
-    
-
-
-# Dummy eligibility check function with hardcoded users
-def check_eligibility(github_username, stackoverflow_username):
-    eligible_users = ["eligible_user", "test_candidate"]  # Hardcoded eligible users
-    
-    # Check if either username is in the eligible users list
-    if github_username in eligible_users or stackoverflow_username in eligible_users:
-        return True, "You are eligible! Proceed to the coding challenge."
-    
-    return False, "Sorry, you are not eligible based on the provided information."
 
     

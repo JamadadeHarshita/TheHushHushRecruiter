@@ -1,18 +1,25 @@
 {% extends 'base.html' %}
 
-{% block title %}Machine Learning Model{% endblock %}
+{% block title %}Doodle HR{% endblock %}
 
 {% block content %}
-    <header>
-        <img src="venv\app\static\logo.png" alt="Logo" class="logo">
-        <h1>doodle.</h1>
-    </header>
+        <header class="header">
+            <h1>doodle.</h1>
+        </header>
 
+        <!-- Form to submit for fetching top candidates -->
+        <form method="POST" action="{{ url_for('index') }}" onsubmit="showLoader()">
+            <button class="button-51" role="button">Find Top Candidates</button>
 
+            <!-- Loader to show while the machine learning model is running -->
+            <div class="loader" id="loader" style="display:none;"></div>
+        </form>
+    </div>
 
-    <!-- Button to run the machine learning model and display top candidates -->
-    <div class="background-text">Doodle</div>
-    <form method="POST" action="{{ url_for('index') }}">
-        <button class="button-51" role="button" >Find Top Candidates</button>
-    </form>
+    <script>
+        // Show the loader when form is submitted
+        function showLoader() {
+            document.getElementById('loader').style.display = 'block';
+        }
+    </script>
 {% endblock %}

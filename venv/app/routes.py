@@ -122,7 +122,7 @@ def send_confirmation_email(username):
 
 
 def send_selection_email(username, feedback_text=None):
-    recipient_email = "jamadadeharshita@gmail.com"  # Use your email for testing
+    recipient_email = "jamadadeharshita@gmail.com" 
     
     msg = Message("Congratulations! You've been selected",
                   recipients=[recipient_email])
@@ -427,7 +427,7 @@ def register_routes(app):
 
     @app.route('/submission_confirmation')
     def submission_confirmation():
-        email = "jamadadeharshita@gmail.com"  # Change this to dynamically use the user's email if needed
+        email = "jamadadeharshita@gmail.com"  
         return render_template('submission_confirmation.html', email=email)
     
     

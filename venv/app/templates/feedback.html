@@ -7,23 +7,23 @@
   <h1>Feedback for Submission</h1>
 
   <h3>User Details:</h3>
-  <p><strong>User ID:</strong> {{ user_id }}</p>  <!-- Use user_id instead of submission.username -->
-  <p><strong>Username:</strong> {{ username }}</p>  <!-- Use username instead of submission.username -->
+  <p><strong>User ID:</strong> {{ user_id }}</p>
+  <p><strong>Username:</strong> {{ username }}</p>
 
   <h3>Submitted Code:</h3>
-  <pre>{{ code }}</pre>  <!-- Use code instead of submission.code -->
+  <pre>{{ code }}</pre>
 
   <form method="POST">
-      <label for="feedback">Feedback:</label>
-      <textarea name="feedback" id="feedback" rows="5" required></textarea>
-
-      <br>
-
-      <label for="score">Score:</label>
-      <input type="number" name="score" id="score" required>
+      <label for="feedback">Feedback (optional):</label>
+      <textarea name="feedback" id="feedback" rows="5"></textarea>
 
       <br><br>
 
-      <button type="submit">Submit Feedback</button>
+      <!-- Wrap buttons inside a container -->
+      <div class="button-container">
+          <button type="submit" name="action" value="selected" class="btn btn-success feedback-btn">Selected</button>
+          <button type="submit" name="action" value="not_selected" class="btn btn-danger feedback-btn">Not Selected</button>
+      </div>
   </form>
+
 {% endblock %}

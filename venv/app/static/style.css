@@ -43,13 +43,7 @@ header {
     align-items: center;
 }
 
-/* Logo styling */
-.logo {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    height: 60px; /* Adjust the height as per your logo */
-}
+
 
 /* Site header text */
 .site-header h1 {
@@ -58,29 +52,8 @@ header {
     text-align: center;
 }
 
-/* Background text styling */
-.background-text {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-    color: rgba(252, 58, 106, 0.35); /* Lightened Pinky */
-    font-size: 150px;
-    font-weight: bold;
-    z-index: -1;
-}
 
-/* Login container styling */
-.login-container {
-    background: #ffffff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    width: 300px;
-    text-align: center;
-    z-index: 1;
-}
+
 
 form {
     display: flex;
@@ -247,4 +220,51 @@ a {
     text-decoration: none;
     color: #5cbdb9; /* Blue Greeny for links */
     font-weight: bold;
+}
+
+
+
+/* Flexbox container for the buttons */
+.button-container {
+    display: flex;
+    justify-content: space-between;  /* Adds space between the buttons */
+    gap: 10px;  /* Adds space between the buttons */
+}
+
+/* Adjust button width to make them align properly */
+.feedback-btn {
+    flex: 1;  /* Ensure the buttons take equal width */
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    color: #fff;
+    text-align: center;
+}
+
+/* Green for selected button */
+.feedback-btn.btn-success {
+    background-color: #59d075;
+}
+
+/* Red for not selected button */
+.feedback-btn.btn-danger {
+    background-color: #cb5d68;
+}
+
+/* Add hover effect */
+.feedback-btn:hover {
+    opacity: 0.9;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .button-container {
+        flex-direction: column;  /* Stack buttons on small screens */
+    }
+
+    .feedback-btn {
+        width: 100%;
+        margin-bottom: 10px;
+    }
 }

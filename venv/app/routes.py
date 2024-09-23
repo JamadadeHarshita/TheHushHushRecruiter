@@ -73,15 +73,18 @@ def send_test_link_email(username, recipient_email="jamadadeharshita@gmail.com")
     )
     
     msg.body = f"""
-    Hi {username},
+        Hi {username},
 
-    Congratulations! Based on your profile, you're invited to participate in a coding test.
+        We hope this message finds you well. Based on a review of your Stackoverflow Profile, we would like to invite you to participate in a evaluation as part of our talent discovery process at Doodle.
 
-    Please use this link to take the test: http://127.0.0.1:5000/test_link
+        Please follow the link below to complete a short technical challenge:
+        http://127.0.0.1:5000/test_link
 
-    Best regards,
-    Doodle Recruitment Team
-    """
+        Your participation is confidential, and we will reach out with next steps if you're a good match for one of our upcoming opportunities.
+
+        Best regards,
+        The Doodle Recruitment Team
+        """
     
     try:
         # Attempt to send the email
@@ -118,18 +121,19 @@ def send_confirmation_email(username):
 
 
 
-# Send feedback emails to candidates
-def send_feedback_email(username, feedback_text=None, score=None):
+def send_selection_email(username, feedback_text=None):
     recipient_email = "jamadadeharshita@gmail.com"  # Use your email for testing
     
-    msg = Message("Feedback for Your Submission",
+    msg = Message("Congratulations! You've been selected",
                   recipients=[recipient_email])
 
-    if not feedback_text or feedback_text.strip() == "":
+    if feedback_text:
         msg.body = f"""
         Dear {username},
 
-        Your submission has been reviewed. Unfortunately, no specific feedback was provided.
+        Congratulations! Based on your submission, you have been selected.
+
+        Feedback: {feedback_text}
 
         Best regards,
         Doodle Recruitment Team
@@ -138,10 +142,7 @@ def send_feedback_email(username, feedback_text=None, score=None):
         msg.body = f"""
         Dear {username},
 
-        Your submission has been reviewed.
-
-        Feedback: {feedback_text}
-        Score: {score if score else 'N/A'}
+        Congratulations! Based on your submission, you have been selected.
 
         Best regards,
         Doodle Recruitment Team
@@ -149,6 +150,41 @@ def send_feedback_email(username, feedback_text=None, score=None):
 
     # Send the email using Flask-Mail
     mail.send(msg)
+
+
+
+
+def send_rejection_email(username, feedback_text=None):
+    recipient_email = "jamadadeharshita@gmail.com"  # Use your email for testing
+    
+    msg = Message("Your Submission Result",
+                  recipients=[recipient_email])
+
+    if feedback_text:
+        msg.body = f"""
+        Dear {username},
+
+        Thank you for your submission. Unfortunately, you have not been selected.
+
+        Feedback: {feedback_text}
+
+        Best regards,
+        Doodle Recruitment Team
+        """
+    else:
+        msg.body = f"""
+        Dear {username},
+
+        Thank you for your submission. Unfortunately, you have not been selected.
+
+        Best regards,
+        Doodle Recruitment Team
+        """
+
+    # Send the email using Flask-Mail
+    mail.send(msg)
+
+
 
 
 def register_routes(app):
@@ -232,18 +268,26 @@ def register_routes(app):
         return render_template('coding_challenge.html', challenge=selected_challenge)
 
 
+
     @app.route('/submit_code', methods=['POST'])
     def submit_code():
         try:
+            # Get the user's input
             code = request.form.get('code')
             entered_username = request.form.get('username')  # Get the username from the user input
             
+            # Retrieve the challenge from the session
+            challenge = session.get('challenge')
+
+            # Error: No code submitted
             if not code:
-                return render_template('coding_challenge.html', error="No code submitted. Please enter your code.")
+                return render_template('coding_challenge.html', error="No code submitted. Please enter your code.", challenge=challenge)
             
+            # Error: No username entered
             if not entered_username:
-                return render_template('coding_challenge.html', error="No username entered. Please provide your username.")
+                return render_template('coding_challenge.html', error="No username entered. Please provide your username.", challenge=challenge)
             
+            # Connect to the SQLite database
             conn = sqlite3.connect('stackoverflow_users.db')
             c = conn.cursor()
 
@@ -254,13 +298,25 @@ def register_routes(app):
             
             candidate = c.fetchone()
 
+            # If the candidate is not found, return an error and keep displaying the challenge
             if not candidate:
-                # If no candidate found with the entered username, show an error
                 conn.close()
-                return render_template('coding_challenge.html', error="You are not an eligible candidate. Please check your username.")
+                return render_template('coding_challenge.html', error="You are not an eligible candidate. Please check your username.", challenge=challenge)
             
-            # If the candidate exists, proceed to get the user ID and insert the submission
-            user_id = candidate[0] 
+            # If the candidate exists, proceed to get the user ID
+            user_id = candidate[0]
+
+            # Check if the user has already submitted a solution
+            c.execute('''
+                SELECT * FROM submissions_1 WHERE id = ?
+            ''', (user_id,))
+            
+            existing_submission = c.fetchone()
+
+            if existing_submission:
+                conn.close()
+                # If a submission already exists, display a message that they've already submitted their code
+                return render_template('coding_challenge.html', error="You've already submitted your solution.", challenge=challenge)
             
             # Insert the submitted code and user's ID into the 'submissions_1' table
             c.execute('''
@@ -268,17 +324,22 @@ def register_routes(app):
                 VALUES (?, ?, ?)
             ''', (user_id, entered_username, code))
 
+            # Commit changes and close the database connection
             conn.commit()
             conn.close()
 
             # Send a confirmation email to the user after submission
             send_confirmation_email(entered_username)
 
-            return render_template('submission_confirmation.html')  # Create this template for confirmation
+            # Render a confirmation template
+            return render_template('submission_confirmation.html')
 
         except Exception as e:
             print("An error occurred:", e)
-            return render_template('coding_challenge.html', error="An internal error occurred. Please try again.")
+            challenge = session.get('challenge')
+            return render_template('coding_challenge.html', error="An internal error occurred. Please try again.", challenge=challenge)
+
+
 
 
     @app.route('/evaluation')
@@ -333,21 +394,31 @@ def register_routes(app):
         user_id, username, code, feedback, score = submission_data
 
         if request.method == 'POST':
+            # Get feedback and score from the form
             feedback_text = request.form.get('feedback')
-            score = int(request.form.get('score'))
+            # score = request.form.get('score', None)
+
+            # Determine if the manager selected the candidate or not
+            action = request.form.get('action')
+
+            if action == 'selected':
+                # Send an email for selection
+                send_selection_email(username, feedback_text)
+                selection_status = "Selected"
+            elif action == 'not_selected':
+                # Send an email for rejection
+                send_rejection_email(username, feedback_text)
+                selection_status = "Not Selected"
 
             # Update the feedback and score for the specific submission
             c.execute('''
                 UPDATE submissions_1
-                SET feedback = ?, score = ?
+                SET feedback = ?, score = ?, selection_status = ?
                 WHERE id = ?
-            ''', (feedback_text, score, submission_id))
+            ''', (feedback_text, score, selection_status, submission_id))
 
             conn.commit()
             conn.close()
-
-            # Send feedback email to the user
-            send_feedback_email(username, feedback_text, score)
 
             return redirect(url_for('index'))
 

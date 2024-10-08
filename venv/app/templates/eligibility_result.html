@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+
+{% block title %}Eligibility Result{% endblock %}
+
+{% block content %}
+  <h1>{{ message }}</h1>
+  <a href="{{ url_for('index') }}">Go Back</a>  <!-- Corrected endpoint -->
+{% endblock %}

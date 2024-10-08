@@ -1,40 +1,270 @@
-/* app/static/style.css */
+
+/* Loader styles */
+.loader {
+  height: 20px;
+  border-radius: 20px;
+  background:
+    radial-gradient(farthest-side, #000606, #0000) left/20px 20px no-repeat
+    lightblue;
+  animation: l2 1s infinite linear;
+}
+
+@keyframes l2 {
+  50% {
+    background-position: right;
+  }
+}
+/* General body styling */
 body {
     font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
+    background: #ebf6f5; /* Teeny Greeny for the background */
+    color: #333;
     margin: 0;
-    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    position: relative;
 }
 
-.container {
-    width: 80%;
-    margin: auto;
-    overflow: hidden;
+/* Header styling */
+header {
+    background: #5cbdb9; /* Blue Greeny for the header */
+    color: #fff;
+    width: 100%;
+    padding: 20px;
+    text-align: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-h1 {
+
+
+/* Site header text */
+.site-header h1 {
+    margin: 0;
+    font-size: 36px;
+    text-align: center;
+}
+
+
+
+
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+form label {
+    margin-bottom: 5px;
     color: #333;
 }
 
-.form-group {
+form input {
     margin-bottom: 15px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
 }
 
-label {
-    display: block;
+form button {
+    padding: 10px;
+    background: #5cbdb9; /* Blue Greeny for the button */
+    border: none;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+form button:hover {
+    background: #fbe3e8; /* Pinky on hover */
+}
+
+/* Candidate details page styling */
+body.candidate-page {
+    font-family: Arial, sans-serif;
+    background: #ebf6f5; /* Teeny Greeny background */
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    color: #333;
+}
+
+/* Site header styling for candidate page */
+.site-header {
+    background: #5cbdb9; /* Blue Greeny */
+    color: #0d3330;
+    width: 100%;
+    padding: 20px;
+    text-align: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+}
+
+.site-header h1 {
+    margin: 0;
+    font-size: 36px;
+}
+
+/* Main content container */
+.content-container {
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    width: 80%;
+    max-width: 1200px;
+    margin: 80px auto 20px;
+    text-align: center;
+}
+
+/* Table styling */
+table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 20px 0;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+    border: 1px solid #ddd;
+}
+
+th {
+    background-color: #5cbdb9; /* Blue Greeny for table headers */
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    font-size: 14px;
+    border: none;
+}
+
+td {
+    background-color: #ffffff;
+    border: none;
+}
+
+tr:hover {
+    background-color: #fbe3e8; /* Pinky for hover */
+}
+
+@media all and (max-width: 767px) {
+    table {
+        border: 0;
+    }
+    thead {
+        display: none;
+    }
+    tr {
+        display: block;
+        margin-bottom: 15px;
+        border-bottom: 2px solid #ddd;
+    }
+    td {
+        display: block;
+        text-align: right;
+        font-size: 13px;
+        border-bottom: 1px dotted #ccc;
+        position: relative;
+        padding-left: 50%;
+    }
+    td:before {
+        content: attr(data-label);
+        position: absolute;
+        left: 0;
+        width: 50%;
+        padding-left: 10px;
+        font-weight: bold;
+        text-align: left;
+    }
+    td:last-child {
+        border-bottom: 0;
+    }
+}
+
+/* Additional content styling */
+.container {
+    text-align: center;
+    padding: 50px;
+    background-color: #fbe3e8; /* Pinky */
+    border-radius: 50% 20% / 10% 40%;
+    margin: 100px auto;
+    width: 50%;
+    box-shadow: 0px 0px 10px #aaa;
+}
+
+h2 {
+    color: #5cbdb9; /* Blue Greeny for headers */
+}
+
+p {
+    font-size: 1.2em;
+    margin-bottom: 20px;
+}
+
+a {
+    text-decoration: none;
+    color: #5cbdb9; /* Blue Greeny for links */
     font-weight: bold;
 }
 
-textarea {
-    width: 100%;
-    padding: 10px;
-    font-size: 16px;
+
+
+/* Flexbox container for the buttons */
+.button-container {
+    display: flex;
+    justify-content: space-between;  /* Adds space between the buttons */
+    gap: 10px;  /* Adds space between the buttons */
 }
 
-input[type="submit"] {
-    padding: 10px 20px;
-    background-color: #5cb85c;
-    border: none;
-    color: white;
+/* Adjust button width to make them align properly */
+.feedback-btn {
+    flex: 1;  /* Ensure the buttons take equal width */
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 4px;
     cursor: pointer;
+    color: #fff;
+    text-align: center;
+}
+
+/* Green for selected button */
+.feedback-btn.btn-success {
+    background-color: #59d075;
+}
+
+/* Red for not selected button */
+.feedback-btn.btn-danger {
+    background-color: #cb5d68;
+}
+
+/* Add hover effect */
+.feedback-btn:hover {
+    opacity: 0.9;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .button-container {
+        flex-direction: column;  /* Stack buttons on small screens */
+    }
+
+    .feedback-btn {
+        width: 100%;
+        margin-bottom: 10px;
+    }
 }

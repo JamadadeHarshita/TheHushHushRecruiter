@@ -1,0 +1,34 @@
+{% extends 'base.html' %}  <!-- Inherit from base.html -->
+
+{% block title %}Manager Dashboard{% endblock %}
+
+{% block content %}
+  <h1>Manager Dashboard</h1>
+
+  {% if submissions %}
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Username</th>
+          <th>Submission Time</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for submission in submissions %}
+          <tr>
+            <td>{{ submission[0] }}</td> <!-- submission[0] is the ID -->
+            <td>{{ submission[1] }}</td> <!-- submission[1] is the username -->
+            <td>{{ submission[2] }}</td> <!-- submission[2] is the submission_time -->
+            <td>
+              <a href="{{ url_for('feedback', submission_id=submission[0]) }}" class="btn btn-primary">Evaluate</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>No submissions found.</p>
+  {% endif %}
+{% endblock %}

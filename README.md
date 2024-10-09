@@ -68,7 +68,7 @@ The **HushHush Recruiter** system integrates a machine learning backend with a F
 - **Machine Learning Models**: K-Means, PCA, Logistic Regression
 - **CSS**: UI styling
 - **Email Services**: Automated email sending
-- **Database Integration**: For storing candidate data
+- **Database Integration**: SQLite3
 
 ---
 

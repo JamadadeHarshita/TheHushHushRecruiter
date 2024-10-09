@@ -1,5 +1,3 @@
-I can help you generate a `README.md` file for your project based on the content from the presentation. Here's a draft of the README for your repository, which you can modify as needed:
-
 ---
 
 # The HushHush Recruiter

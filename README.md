@@ -1,5 +1,3 @@
----
-
 # The HushHush Recruiter
 
 ### Developed by Team 05: Insight Impactors  
